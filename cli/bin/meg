@@ -1,0 +1,81 @@
+#!/usr/bin/env ruby
+
+require "thor"
+require 'active_support/concern'
+
+module Meg
+  class SubThor < Thor
+    def self.banner(command, namespace = nil, subcommand = false)
+      sans_help = ARGV[0] == "help" ? ARGV[1] : ARGV[0]
+      "#{basename} #{sans_help} #{command.usage}"
+    end
+  end
+
+  $modules = []
+  CLASS_REGEX = /class\s(\w+)\s+\<\s+\SubThor/
+  begin
+    # load shared libraries
+    Dir.glob('./lib/*.rb').each do |file|
+      require file
+    end
+
+    # load module code
+    Dir.glob('./concerns/*.rb').each do |file|
+      require file
+    end
+
+    # load modules
+    Dir.glob('./modules/*.rb').each do |mod_file|
+      require mod_file
+      $modules << open(mod_file) do |file|
+        file.grep(CLASS_REGEX) do |line|
+          class_name = line.match(CLASS_REGEX)[1]
+          self.const_get(class_name)
+        end
+      end
+    end
+  rescue StandardError => e
+    puts "Unable to load module: #{e.message}"
+  end
+
+  class Meg < Thor
+    include Thor::Actions
+
+    def self.exit_on_failure?
+      true
+    end
+
+    def self.source_root
+      File.dirname(__FILE__)
+    end
+
+    method_option :apptype, :type => :string, :aliases => "-t", :default => "default"
+    desc "new APPNAME", "Generates a new mobile application skeleton named APPNAME"
+    def new(appname)
+      apptype = options[:apptype]
+      opts = { :appname => appname }
+      puts "Generating mobile application skeleton for '#{appname}' with type '#{apptype}'"
+      if (!File.directory?("templates/apps/#{apptype}"))
+	raise Thor::Error, "No templates found for application type '#{apptype}'"
+	return
+      end
+      directory "../templates/apps/#{apptype}/copy/", "#{appname}"
+      copy_file "../templates/apps/#{apptype}/rename/default.pro", "#{appname}/#{appname}.pro"
+      template "../templates/apps/#{apptype}/erb/main.qml.erb", "#{appname}/main.qml", opts
+    end
+
+    # load in the subcommands
+    $modules.each do |mod_array|
+      mod_array.each do |klass|
+        begin
+          desc "#{klass::SUBCOMMAND} SUBCOMMAND", klass::DESCRIPTION
+          subcommand klass::SUBCOMMAND, klass
+        rescue StandardError => e
+          puts "Unable to load subcommand: #{e.message}"
+        end
+      end
+    end
+  end
+end
+
+Meg::Meg.start(ARGV)
