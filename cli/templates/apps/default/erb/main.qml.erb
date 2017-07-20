@@ -2,6 +2,7 @@ import QtQuick 2.7
 import QtQuick.Controls 2.0
 import QtQuick.Layouts 1.0
 import QtQuick.Controls.Material 2.0
+import Qt.labs.platform 1.0
 
 ApplicationWindow {
     id: appWindow
@@ -24,7 +25,7 @@ ApplicationWindow {
             }
             Label {
                 id: titleLabel
-		text: "<%= config[:appname] %>"
+                text: "<%= config[:appname] %>"
                 font.bold: true
                 elide: Label.ElideRight
                 horizontalAlignment: Qt.AlignHCenter
@@ -44,24 +45,50 @@ ApplicationWindow {
 
     Drawer {
         id: drawer
-        width: Math.min(appWindow.width, appWindow.height) / 3 * 2
-        height: appWindow.height
+        width: parent.width*2/3
+        height: parent.height
+        Column {
+            anchors.fill: parent
+            Rectangle {
+                width: drawer.width
+                height: appWindow.height / 3
+                color: Material.primaryColor
 
-        Rectangle {
-            width: drawer.width
-            height: appWindow.height / 3
-            color: Material.primaryColor
-
-            Label {
-                width: drawer.width / 3 * 2
-                height: contentHeight
-                anchors { left: parent.left; leftMargin: 5; bottom: parent.bottom; bottomMargin: 5 }
-		text: "<%= config[:appname] %>"
-                fontSizeMode: Text.HorizontalFit
-                font.pixelSize: width
-                font.family: "Roboto"
-                color: "white"
+                Label {
+                    width: drawer.width / 3 * 2
+                    height: contentHeight
+                    anchors { left: parent.left; leftMargin: 5; bottom: parent.bottom; bottomMargin: 5 }
+                    text: "<%= config[:appname] %>"
+                    fontSizeMode: Text.HorizontalFit
+                    font.pixelSize: width
+                    font.family: "Roboto"
+                    color: "white"
+                }
             }
+            ListView {
+                width: parent.width
+                height: 2 * (appWindow.height / 3)
+                model: contents
+                delegate: ItemDelegate {
+                    width: parent.width
+                    text: modelData.menuName
+                    onClicked: {
+                        if (Qt.platform.os === "android")
+                            pluginMainPageLoader.source = "assets:/plugins/" + modelData.pluginName + "/" + modelData.mainPage
+                        else
+			    pluginMainPageLoader.source = "file://" + modelData.pluginName + "/" + modelData.mainPage
+			drawer.close()
+                    }
+                }
+            }
+        }
+    }
+
+    Page {
+        anchors.fill: parent
+        Loader {
+            anchors.fill: parent
+            id: pluginMainPageLoader
         }
     }
 }
