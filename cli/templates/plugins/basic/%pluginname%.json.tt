@@ -1,0 +1,5 @@
+{
+    "menuName": "<%= config[:pluginname] %>",
+    "iconName": "group",
+    "mainPage": "<%= config[:pluginname].downcase %>.qml"
+}
