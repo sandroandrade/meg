@@ -9,7 +9,7 @@ ApplicationWindow {
     visible: true
     width: 640
     height: 480
-    title: qsTr("<%= config[:appname] %>")
+    title: qsTr("<%= config[:projectname] %>")
 
     header: ToolBar {
         RowLayout {
@@ -25,7 +25,7 @@ ApplicationWindow {
             }
             Label {
                 id: titleLabel
-                text: "<%= config[:appname] %>"
+                text: "<%= config[:projectname] %>"
                 font.bold: true
                 elide: Label.ElideRight
                 horizontalAlignment: Qt.AlignHCenter
@@ -58,7 +58,7 @@ ApplicationWindow {
                     width: drawer.width / 3 * 2
                     height: contentHeight
                     anchors { left: parent.left; leftMargin: 5; bottom: parent.bottom; bottomMargin: 5 }
-                    text: "<%= config[:appname] %>"
+                    text: "<%= config[:projectname] %>"
                     fontSizeMode: Text.HorizontalFit
                     font.pixelSize: width
                     font.family: "Roboto"

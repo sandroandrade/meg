@@ -39,7 +39,7 @@ module Meg
   end
 
   class Meg < Thor
-    attr_accessor :appname
+    attr_accessor :projectname
 
     include Thor::Actions
 
@@ -51,18 +51,24 @@ module Meg
       File.dirname(__FILE__)
     end
 
-    method_option :apptype, :type => :string, :aliases => "-t", :default => "default"
-    desc "new APPNAME", "Generates a new mobile application skeleton named APPNAME"
-    def new(appname)
-      self.appname = appname
-      apptype = options[:apptype]
-      opts = { :appname => appname }
-      puts "Generating mobile application skeleton for '#{appname}' with type '#{apptype}'"
-      if (!File.directory?("templates/apps/#{apptype}"))
-	raise Thor::Error, "No templates found for application type '#{apptype}'"
+    no_tasks do
+        def projectname
+            @projectname.downcase
+        end
+    end
+
+    method_option :projecttype, :type => :string, :aliases => "-t", :default => "default"
+    desc "new PROJECTNAME", "Generates a new project skeleton named PROJECTNAME"
+    def new(projectname)
+      self.projectname = projectname
+      projecttype = options[:projecttype]
+      opts = { :projectname => projectname }
+      puts "Generating project skeleton for '#{projectname}' with type '#{projecttype}'"
+      if (!File.directory?("templates/projects/#{projecttype}"))
+	raise Thor::Error, "No templates found for application type '#{projecttype}'"
 	return
       end
-      directory "../templates/apps/#{apptype}/", "#{appname}/", opts
+      directory "../templates/projects/#{projecttype}/", "#{projectname.downcase}/", opts
     end
 
     # load in the subcommands
