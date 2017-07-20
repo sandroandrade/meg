@@ -30,18 +30,21 @@ module Meg
 
     no_tasks do
         def pluginname
-	    @pluginname.downcase
+            @pluginname.downcase.pluralize
+	end
+	def nowformated
+	    Time.now.strftime('%Y%m%d%H%M%S')
 	end
     end
 
     method_option :plugintype, :type => :string, :aliases => "-t", :default => "basic"
     method_option :appdir, :type => :string, :aliases => "-a", :required => true
     desc "plugin PLUGINNAME", "Generates a new model-view plugin named PLUGINNAME"
-    def plugin(pluginname)
+    def plugin(pluginname, *fields)
 	self.pluginname = pluginname
 	plugintype = options[:plugintype]
 	appdir = options[:appdir]
-	opts = { :pluginname => pluginname }
+	opts = { :pluginname => pluginname, :fields => fields }
         puts "Generating '#{plugintype}' plugin '#{pluginname}' for application '#{appdir}'"
 	if (!File.directory?("#{appdir}"))
             raise Thor::Error, "No application '#{appdir}' has been found"
@@ -51,7 +54,7 @@ module Meg
             raise Thor::Error, "No templates found for plugin type '#{plugintype}'"
             return
         end
-	directory "../templates/plugins/#{plugintype}/", "#{appdir}/plugins/", opts
+	directory "../templates/plugins/#{plugintype}/", "#{appdir}/", opts
     end
 
   end

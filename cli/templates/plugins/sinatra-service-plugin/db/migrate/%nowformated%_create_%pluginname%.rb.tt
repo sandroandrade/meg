@@ -1,0 +1,9 @@
+class Create<%= config[:pluginname].capitalize.pluralize %> < ActiveRecord::Migration[5.0]
+  def change
+    create_table :<%= config[:pluginname].downcase.pluralize %> do |t|
+      <%- config[:fields].each do |field| -%>
+      t.<%= field.split(':').last -%> :<%= field.split(':').first %>
+      <%- end -%>
+    end
+  end
+end
