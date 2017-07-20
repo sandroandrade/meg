@@ -39,6 +39,8 @@ module Meg
   end
 
   class Meg < Thor
+    attr_accessor :appname
+
     include Thor::Actions
 
     def self.exit_on_failure?
@@ -52,6 +54,7 @@ module Meg
     method_option :apptype, :type => :string, :aliases => "-t", :default => "default"
     desc "new APPNAME", "Generates a new mobile application skeleton named APPNAME"
     def new(appname)
+      self.appname = appname
       apptype = options[:apptype]
       opts = { :appname => appname }
       puts "Generating mobile application skeleton for '#{appname}' with type '#{apptype}'"
@@ -59,9 +62,7 @@ module Meg
 	raise Thor::Error, "No templates found for application type '#{apptype}'"
 	return
       end
-      directory "../templates/apps/#{apptype}/copy/", "#{appname}"
-      copy_file "../templates/apps/#{apptype}/rename/default.pro", "#{appname}/#{appname}.pro"
-      template "../templates/apps/#{apptype}/erb/main.qml.erb", "#{appname}/main.qml", opts
+      directory "../templates/apps/#{apptype}/", "#{appname}/", opts
     end
 
     # load in the subcommands
