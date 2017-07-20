@@ -1,3 +1,5 @@
+require 'active_support/inflector'
+
 module Meg
   class MyGenerate < SubThor
     attr_accessor :pluginname

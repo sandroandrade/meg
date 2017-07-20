@@ -1,0 +1,4 @@
+require 'active_record'
+
+class <%= config[:pluginname].capitalize %> < ActiveRecord::Base
+end

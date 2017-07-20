@@ -6,8 +6,7 @@ require 'sinatra/activerecord'
 ActiveRecord::Base.establish_connection @dbconfig[@environment]
 
 current_dir = Dir.pwd
-Dir["#{current_dir}/models/*.rb"].each { |file| require file }
+Dir["#{current_dir}/plugins/models/*.rb"].each { |file| require file }
 
-get '/conferences' do
-  Conference.all.to_json
-end
+current_dir = Dir.pwd
+Dir["#{current_dir}/plugins/services/*.rb"].each { |file| require file }

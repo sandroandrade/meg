@@ -1,0 +1,3 @@
+get '/<%= config[:pluginname].downcase.pluralize %>' do
+    <%= config[:pluginname].capitalize %>.all.to_json
+end
