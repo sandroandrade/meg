@@ -25,7 +25,7 @@ ApplicationWindow {
                     fillMode: Image.Pad
                     horizontalAlignment: Image.AlignHCenter
                     verticalAlignment: Image.AlignVCenter
-                    source: "qrc:/icons/menu.png"
+                    source: "file:icons/menu.png"
                 }
                 onClicked: drawer.open()
             }
@@ -43,7 +43,7 @@ ApplicationWindow {
                     fillMode: Image.Pad
                     horizontalAlignment: Image.AlignHCenter
                     verticalAlignment: Image.AlignVCenter
-                    source: "qrc:/icons/more_vert.png"
+                    source: "file:icons/more_vert.png"
                 }
             }
         }
@@ -75,16 +75,28 @@ ApplicationWindow {
                 width: parent.width
                 height: 2 * (appWindow.height / 3)
                 model: contents
-                delegate: ItemDelegate {
+                delegate: Row {
                     width: parent.width
-                    text: modelData.menuName
-                    onClicked: {
-                        if (Qt.platform.os === "android")
-                            pluginMainPageLoader.source = "assets:/plugins/" + modelData.pluginName + "/" + modelData.mainPage
-                        else
-                            pluginMainPageLoader.source = "file://" + modelData.pluginName + "/" + modelData.mainPage
-                        internal.selectedPluginIndex = index
-                        drawer.close()
+                    leftPadding: 10
+                    Image {
+                        width: delegate.height/2; height: delegate.height
+                        fillMode: Image.Pad
+                        horizontalAlignment: Image.AlignHCenter
+                        verticalAlignment: Image.AlignVCenter
+                        source: "file:icons/" + modelData.icon + "_black.png"
+                    }
+                    ItemDelegate {
+                        id: delegate
+                        width: parent.width-height/2
+                        text: modelData.menuName
+                        onClicked: {
+                            if (Qt.platform.os === "android")
+                                pluginMainPageLoader.source = "assets:/plugins/" + modelData.pluginName + "/" + modelData.mainPage
+                            else
+                                pluginMainPageLoader.source = "file://" + modelData.pluginName + "/" + modelData.mainPage
+                            internal.selectedPluginIndex = index
+                            drawer.close()
+                        }
                     }
                 }
             }

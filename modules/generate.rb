@@ -40,13 +40,15 @@ module Meg
     method_option :plugintype, :type => :string, :aliases => "-t", :default => "basic-plugin"
     method_option :appdir, :type => :string, :aliases => "-a", :required => true
     method_option :itemhead, :type => :string, :aliases => "-i"
+    method_option :icon, :type => :string, :aliases => "-c"
     desc "plugin PLUGINNAME", "Generates a new plugin named PLUGINNAME"
     def plugin(pluginname, *fields)
 	self.pluginname = pluginname
 	plugintype = options[:plugintype]
 	appdir = options[:appdir]
 	itemhead = options[:itemhead]
-	opts = { :pluginname => pluginname, :fields => fields, :itemhead => itemhead }
+	icon = options[:icon]
+	opts = { :pluginname => pluginname, :fields => fields, :itemhead => itemhead, :icon => icon }
         puts "Generating '#{plugintype}' plugin '#{pluginname}' for application '#{appdir}' with item head '#{itemhead}'"
 	if (!File.directory?("#{appdir}"))
             raise Thor::Error, "No application '#{appdir}' has been found"
@@ -57,6 +59,10 @@ module Meg
             return
         end
 	directory "../templates/plugins/#{plugintype}/", "#{appdir}/", opts
+	if (!icon.nil?)
+	    `wget https://github.com/google/material-design-icons/raw/master/'#{icon.split('/').first}'/drawable-mdpi/'#{icon.split('/').last}'_white_24dp.png -O '#{appdir}'/icons/'#{icon.split('/').last}'_white.png`
+	    `wget https://github.com/google/material-design-icons/raw/master/'#{icon.split('/').first}'/drawable-mdpi/'#{icon.split('/').last}'_black_24dp.png -O '#{appdir}'/icons/'#{icon.split('/').last}'_black.png`
+	end
     end
 
   end

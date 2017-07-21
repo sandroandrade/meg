@@ -1,6 +1,6 @@
 {
     "menuName": "<%= config[:pluginname].capitalize %>",
-    "iconName": "group",
-    "mainPage": "<%= config[:pluginname].downcase %>.qml",
+    "icon": "<%= config[:icon].split('/').last %>",
+    "mainPage": "<%= config[:pluginname].downcase.pluralize %>.qml",
     "itemHead": "<%= config[:itemhead] %>"
 }

@@ -10,10 +10,22 @@ StackView {
 
     initialItem: ListView {
         id: listView
-        delegate: ItemDelegate {
-            text: modelData[itemHead]
+        delegate: Row {
             width: parent.width
-            onClicked: stackView.push(itensPage, { "model": stackView.model[index], "stackView": stackView })
+            leftPadding: 10
+            Image {
+                width: delegate.height/2; height: delegate.height
+                fillMode: Image.Pad
+                horizontalAlignment: Image.AlignHCenter
+                verticalAlignment: Image.AlignVCenter
+                source: "file:icons/" + contents[internal.selectedPluginIndex].icon + "_black.png"
+            }
+            ItemDelegate {
+                id: delegate
+                text: modelData[itemHead]
+                width: parent.width
+                onClicked: stackView.push(itensPage, { "model": stackView.model[index], "stackView": stackView })
+            }
         }
     }
 }
