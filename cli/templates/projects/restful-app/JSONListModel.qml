@@ -6,23 +6,17 @@ Item {
     property string source
     property string requestMethod: "GET"
     property string requestParams
-    property ListModel model: ListModel { id: listModel }
-    property alias count: listModel.count
     property string errorString: ""
-    property int httpStatus
+    property int httpStatus: 0
 
-    QtObject {
-        id: privateProperties
-        property string json: ""
-        onJsonChanged: updateJSONModel()
-    }
+    property var json
 
     state: "null"
     states: [
           State { name: "null" },
-          State { name: "ready"},
-          State { name: "loading"},
-          State { name: "error"}
+          State { name: "ready" },
+          State { name: "loading" },
+          State { name: "error" }
     ]
 
     function load() {
@@ -34,10 +28,11 @@ Item {
             rootItem.state = "error";
         }
         xhr.onreadystatechange = function() {
-            if (xhr.readyState == XMLHttpRequest.DONE) {
+            if (xhr.readyState === XMLHttpRequest.DONE) {
                 rootItem.httpStatus = xhr.status;
                 if (rootItem.httpStatus >= 200 && rootItem.httpStatus <= 299) {
-                    privateProperties.json = xhr.responseText;
+                    json = JSON.parse(xhr.responseText);
+                    rootItem.state = "ready";
                 }
                 else {
                     rootItem.errorString = qsTr("The server returned error ") + xhr.status;
@@ -45,26 +40,9 @@ Item {
                 }
             }
         }
-        xhr.send(requestParams); // requestParams ignored if requestMethod equals GET
         rootItem.errorString = ""
         rootItem.state = "loading";
-    }
-
-    function updateJSONModel() {
-        listModel.clear();
-
-        if (privateProperties.json === "") {
-            rootItem.errorString = qsTr("The server returned an empty response!");
-            rootItem.state = "error";
-            return;
-        }
-
-        var objectArray = JSON.parse(privateProperties.json);
-        for (var key in objectArray) {
-            var jo = objectArray[key];
-            listModel.append(jo);
-        }
-
-        rootItem.state = "ready";
+        json = undefined
+        xhr.send(requestParams); // requestParams ignored if requestMethod equals GET
     }
 }

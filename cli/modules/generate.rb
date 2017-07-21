@@ -37,15 +37,17 @@ module Meg
 	end
     end
 
-    method_option :plugintype, :type => :string, :aliases => "-t", :default => "basic"
+    method_option :plugintype, :type => :string, :aliases => "-t", :default => "basic-plugin"
     method_option :appdir, :type => :string, :aliases => "-a", :required => true
-    desc "plugin PLUGINNAME", "Generates a new model-view plugin named PLUGINNAME"
+    method_option :itemhead, :type => :string, :aliases => "-i"
+    desc "plugin PLUGINNAME", "Generates a new plugin named PLUGINNAME"
     def plugin(pluginname, *fields)
 	self.pluginname = pluginname
 	plugintype = options[:plugintype]
 	appdir = options[:appdir]
-	opts = { :pluginname => pluginname, :fields => fields }
-        puts "Generating '#{plugintype}' plugin '#{pluginname}' for application '#{appdir}'"
+	itemhead = options[:itemhead]
+	opts = { :pluginname => pluginname, :fields => fields, :itemhead => itemhead }
+        puts "Generating '#{plugintype}' plugin '#{pluginname}' for application '#{appdir}' with item head '#{itemhead}'"
 	if (!File.directory?("#{appdir}"))
             raise Thor::Error, "No application '#{appdir}' has been found"
             return

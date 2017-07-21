@@ -57,7 +57,7 @@ module Meg
         end
     end
 
-    method_option :projecttype, :type => :string, :aliases => "-t", :default => "default"
+    method_option :projecttype, :type => :string, :aliases => "-t", :default => "simple-app"
     desc "new PROJECTNAME", "Generates a new project skeleton named PROJECTNAME"
     def new(projectname)
       self.projectname = projectname

@@ -1,0 +1,26 @@
+import QtQuick 2.7
+import QtQuick.Controls 2.0
+import Qt.labs.settings 1.0
+import "../../"
+
+Item {
+    JSONListModel { id: <%= config[:pluginname].downcase %>Model; source: internal.baseServer + "/<%= config[:pluginname].downcase.pluralize %>" }
+
+    ListView {
+        anchors.fill: parent
+        model: <%= config[:pluginname].downcase.pluralize %>Model.json
+        delegate: ItemDelegate {
+            width: parent.width;
+            text: modelData[contents[internal.selectedPluginIndex].itemHead]
+        }
+    }
+    
+    Settings {
+        property alias <%= config[:pluginname].downcase.pluralize %>Model: <%= config[:pluginname].downcase.pluralize %>Model.json
+    }
+
+    Component.onCompleted: {
+        if (<%= config[:pluginname].downcase.pluralize %>Model.json === undefined)
+            <%= config[:pluginname].downcase.pluralize %>Model.load()
+    }
+}

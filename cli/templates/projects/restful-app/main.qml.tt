@@ -1,0 +1,101 @@
+import QtQuick 2.7
+import QtQuick.Controls 2.0
+import QtQuick.Layouts 1.0
+import QtQuick.Controls.Material 2.0
+import Qt.labs.platform 1.0
+
+ApplicationWindow {
+    id: appWindow
+    visible: true
+    width: 640
+    height: 480
+    title: qsTr("<%= config[:projectname] %>")
+
+    QtObject {
+        id: internal
+        property string baseServer: "http://localhost:4567"
+        property int selectedPluginIndex
+    }
+
+    header: ToolBar {
+        RowLayout {
+            anchors.fill: parent
+            ToolButton {
+                contentItem: Image {
+                    fillMode: Image.Pad
+                    horizontalAlignment: Image.AlignHCenter
+                    verticalAlignment: Image.AlignVCenter
+                    source: "qrc:/icons/menu.png"
+                }
+                onClicked: drawer.open()
+            }
+            Label {
+                id: titleLabel
+                text: "<%= config[:projectname] %>"
+                font.bold: true
+                elide: Label.ElideRight
+                horizontalAlignment: Qt.AlignHCenter
+                verticalAlignment: Qt.AlignVCenter
+                Layout.fillWidth: true
+            }
+            ToolButton {
+                contentItem: Image {
+                    fillMode: Image.Pad
+                    horizontalAlignment: Image.AlignHCenter
+                    verticalAlignment: Image.AlignVCenter
+                    source: "qrc:/icons/more_vert.png"
+                }
+            }
+        }
+    }
+
+    Drawer {
+        id: drawer
+        width: parent.width*2/3
+        height: parent.height
+        Column {
+            anchors.fill: parent
+            Rectangle {
+                width: drawer.width
+                height: appWindow.height / 3
+                color: Material.primaryColor
+
+                Label {
+                    width: drawer.width / 3 * 2
+                    height: contentHeight
+                    anchors { left: parent.left; leftMargin: 5; bottom: parent.bottom; bottomMargin: 5 }
+                    text: "<%= config[:projectname] %>"
+                    fontSizeMode: Text.HorizontalFit
+                    font.pixelSize: width
+                    font.family: "Roboto"
+                    color: "white"
+                }
+            }
+            ListView {
+                width: parent.width
+                height: 2 * (appWindow.height / 3)
+                model: contents
+                delegate: ItemDelegate {
+                    width: parent.width
+                    text: modelData.menuName
+                    onClicked: {
+                        if (Qt.platform.os === "android")
+                            pluginMainPageLoader.source = "assets:/plugins/" + modelData.pluginName + "/" + modelData.mainPage
+                        else
+                            pluginMainPageLoader.source = "file://" + modelData.pluginName + "/" + modelData.mainPage
+                        internal.selectedPluginIndex = index
+                        drawer.close()
+                    }
+                }
+            }
+        }
+    }
+
+    Page {
+        anchors.fill: parent
+        Loader {
+            anchors.fill: parent
+            id: pluginMainPageLoader
+        }
+    }
+}
