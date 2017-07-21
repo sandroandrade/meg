@@ -13,7 +13,6 @@ Cross-platform mobile application development framework
 # Use
 
 Creating a new RESTful server:
-$ cd cli
 $ ./bin/meg new myserver -t sinatra-server
 
 Creating a new RESTful server plugin:

@@ -6,15 +6,13 @@ import "../../"
 Item {
     JSONListModel { id: <%= config[:pluginname].downcase %>Model; source: internal.baseServer + "/<%= config[:pluginname].downcase.pluralize %>" }
 
-    ListView {
+    MyStackView {
         anchors.fill: parent
         model: <%= config[:pluginname].downcase.pluralize %>Model.json
-        delegate: ItemDelegate {
-            width: parent.width;
-            text: modelData[contents[internal.selectedPluginIndex].itemHead]
-        }
+        itemHead: contents[internal.selectedPluginIndex].itemHead
+        itensPage: "plugins/<%= config[:pluginname].downcase %>/<%= config[:pluginname].downcase %>-detail.qml"
     }
-    
+
     Settings {
         property alias <%= config[:pluginname].downcase.pluralize %>Model: <%= config[:pluginname].downcase.pluralize %>Model.json
     }
