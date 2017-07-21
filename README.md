@@ -32,6 +32,6 @@ Creating a new Qt RESTful client:
 $ ./bin/meg new MyApp -t restful-app
 
 Creating a new RESTful client plugin:
-$ ./bin/meg generate plugin conferences -t restful-client-plugin -a myapp -i name
+$ ./bin/meg generate plugin conferences -t restful-client-plugin -a myapp -i name acronym:string name:string city:string venue:string start_date:datetime end_data:datetime
 
 Build and run your Qt mobile application

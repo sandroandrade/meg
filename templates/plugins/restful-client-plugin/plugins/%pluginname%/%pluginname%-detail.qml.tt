@@ -15,13 +15,15 @@ Item {
         width: parent.width
         padding: pluginInternal.padding
         spacing: 15
+        <%- config[:fields].each do |field| -%>
         GroupBox {
-            title: "Abstract"
+            title: "<%= field.split(':').first.capitalize %>"
             width: parent.width-2*pluginInternal.padding
             Label {
-                text: model[contents[internal.selectedPluginIndex].itemHead]
+                text: model["<%= field.split(':').first %>"]
             }
         }
+        <%- end -%>
     }
     MouseArea {
         anchors.fill: parent
