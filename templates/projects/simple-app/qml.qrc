@@ -1,8 +1,7 @@
 <RCC>
     <qresource prefix="/">
         <file>main.qml</file>
-        <file>qtquickcontrols2.conf</file>
-        <file>icons/menu.png</file>
-        <file>icons/more_vert.png</file>
+        <file>AwesomeToolButton.qml</file>
+        <file>FontAwesome.otf</file>
     </qresource>
 </RCC>

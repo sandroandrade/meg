@@ -1,44 +1,40 @@
 import QtQuick 2.7
-import QtQuick.Controls 2.0
-import QtQuick.Layouts 1.0
-import QtQuick.Controls.Material 2.0
-import Qt.labs.platform 1.0
+import QtQuick.Controls 2.1
+import QtQuick.Layouts 1.3
+import QtQuick.Controls.Material 2.1
 
 ApplicationWindow {
     id: appWindow
     visible: true
-    width: 640
-    height: 480
+    width: 360
+    height: 640
     title: qsTr("<%= config[:projectname] %>")
 
+    Material.primary: "#05070d"
+    Material.foreground: "#05070d"
+    Material.accent: "#41cd52"
+
+    FontLoader { id: fontAwesome; source: "qrc:///FontAwesome.otf" }
+    
     header: ToolBar {
+        width: parent.width
         RowLayout {
             anchors.fill: parent
-            ToolButton {
-                contentItem: Image {
-                    fillMode: Image.Pad
-                    horizontalAlignment: Image.AlignHCenter
-                    verticalAlignment: Image.AlignVCenter
-                    source: "qrc:/icons/menu.png"
-                }
+            AwesomeToolButton {
+                text: "\uf0c9"
                 onClicked: drawer.open()
             }
             Label {
-                id: titleLabel
                 text: "<%= config[:projectname] %>"
                 font.bold: true
+                color: "white"
                 elide: Label.ElideRight
                 horizontalAlignment: Qt.AlignHCenter
                 verticalAlignment: Qt.AlignVCenter
                 Layout.fillWidth: true
             }
-            ToolButton {
-                contentItem: Image {
-                    fillMode: Image.Pad
-                    horizontalAlignment: Image.AlignHCenter
-                    verticalAlignment: Image.AlignVCenter
-                    source: "qrc:/icons/more_vert.png"
-                }
+            AwesomeToolButton {
+                text: "\uf0c9"
             }
         }
     }
@@ -76,8 +72,8 @@ ApplicationWindow {
                         if (Qt.platform.os === "android")
                             pluginMainPageLoader.source = "assets:/plugins/" + modelData.pluginName + "/" + modelData.mainPage
                         else
-			    pluginMainPageLoader.source = "file://" + modelData.pluginName + "/" + modelData.mainPage
-			drawer.close()
+                            pluginMainPageLoader.source = "file://" + modelData.pluginName + "/" + modelData.mainPage
+                        drawer.close()
                     }
                 }
             }

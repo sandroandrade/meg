@@ -53,7 +53,7 @@ module Meg
 
     no_tasks do
         def projectname
-            @projectname.downcase
+            @projectname.downcase.gsub(" ", "-")
         end
     end
 
@@ -68,7 +68,7 @@ module Meg
 	raise Thor::Error, "No templates found for application type '#{projecttype}'"
 	return
       end
-      directory "../templates/projects/#{projecttype}/", "#{projectname.downcase}/", opts
+      directory "../templates/projects/#{projecttype}/", "#{projectname.downcase.gsub(" ", "-")}/", opts
     end
 
     # load in the subcommands
