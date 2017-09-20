@@ -23,7 +23,7 @@ ApplicationWindow {
         RowLayout {
             anchors.fill: parent
             AwesomeToolButton {
-                text: FA.icons.bars
+                text: FA.icons["bars"]
                 onClicked: drawer.open()
             }
             Label {
@@ -36,7 +36,7 @@ ApplicationWindow {
                 Layout.fillWidth: true
             }
             AwesomeToolButton {
-                text: FA.icons.bars
+                text: FA.icons["info"]
             }
         }
     }
@@ -55,7 +55,7 @@ ApplicationWindow {
                 Label {
                     width: drawer.width / 3 * 2
                     height: contentHeight
-                    anchors { left: parent.left; leftMargin: 5; bottom: parent.bottom; bottomMargin: 5 }
+                    anchors { left: parent.left; leftMargin: 13; bottom: parent.bottom; bottomMargin: 5 }
                     text: "<%= config[:projectname] %>"
                     fontSizeMode: Text.HorizontalFit
                     font.pixelSize: width
@@ -67,6 +67,7 @@ ApplicationWindow {
                 width: parent.width
                 height: 2 * (appWindow.height / 3)
                 model: contents
+                clip: true
                 delegate: ItemDelegate {
                     width: parent.width
                     text: modelData.menuName
