@@ -3,5 +3,6 @@
         <file>main.qml</file>
         <file>AwesomeToolButton.qml</file>
         <file>FontAwesome.otf</file>
+        <file>FontAwesome.js</file>
     </qresource>
 </RCC>
