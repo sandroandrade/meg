@@ -1,50 +1,48 @@
 import QtQuick 2.7
-import QtQuick.Controls 2.0
-import QtQuick.Layouts 1.0
-import QtQuick.Controls.Material 2.0
+import QtQuick.Controls 2.1
+import QtQuick.Layouts 1.3
+import QtQuick.Controls.Material 2.1
 import Qt.labs.platform 1.0
+
+import "FontAwesome.js" as FA
 
 ApplicationWindow {
     id: appWindow
     visible: true
-    width: 640
-    height: 480
+    width: 360
+    height: 640
     title: qsTr("<%= config[:projectname] %>")
+
+    Material.primary: "#05070d"
+    Material.foreground: "#05070d"
+    Material.accent: "#41cd52"
+
+    FontLoader { id: fontAwesome; source: "qrc:///FontAwesome.otf" }
 
     QtObject {
         id: internal
         property string baseServer: "http://localhost:4567"
-        property int selectedPluginIndex
     }
 
     header: ToolBar {
+        width: parent.width
         RowLayout {
             anchors.fill: parent
-            ToolButton {
-                contentItem: Image {
-                    fillMode: Image.Pad
-                    horizontalAlignment: Image.AlignHCenter
-                    verticalAlignment: Image.AlignVCenter
-                    source: "file:icons/menu.png"
-                }
+            AwesomeToolButton {
+                text: FA.icons["bars"]
                 onClicked: drawer.open()
             }
             Label {
-                id: titleLabel
                 text: "<%= config[:projectname] %>"
                 font.bold: true
+                color: "white"
                 elide: Label.ElideRight
                 horizontalAlignment: Qt.AlignHCenter
                 verticalAlignment: Qt.AlignVCenter
                 Layout.fillWidth: true
             }
-            ToolButton {
-                contentItem: Image {
-                    fillMode: Image.Pad
-                    horizontalAlignment: Image.AlignHCenter
-                    verticalAlignment: Image.AlignVCenter
-                    source: "file:icons/more_vert.png"
-                }
+            AwesomeToolButton {
+                text: FA.icons["info"]
             }
         }
     }
@@ -63,7 +61,7 @@ ApplicationWindow {
                 Label {
                     width: drawer.width / 3 * 2
                     height: contentHeight
-                    anchors { left: parent.left; leftMargin: 5; bottom: parent.bottom; bottomMargin: 5 }
+                    anchors { left: parent.left; leftMargin: 13; bottom: parent.bottom; bottomMargin: 5 }
                     text: "<%= config[:projectname] %>"
                     fontSizeMode: Text.HorizontalFit
                     font.pixelSize: width
@@ -75,39 +73,47 @@ ApplicationWindow {
                 width: parent.width
                 height: 2 * (appWindow.height / 3)
                 model: contents
-                delegate: Row {
+                clip: true
+                delegate: ItemDelegate {
                     width: parent.width
-                    leftPadding: 10
-                    Image {
-                        width: delegate.height/2; height: delegate.height
-                        fillMode: Image.Pad
-                        horizontalAlignment: Image.AlignHCenter
-                        verticalAlignment: Image.AlignVCenter
-                        source: "file:icons/" + modelData.icon + "_black.png"
+                    text: "         " + modelData.menuName
+
+                    AwesomeToolButton {
+                        text: FA.icons[modelData.icon]
+                        enabled: false
                     }
-                    ItemDelegate {
-                        id: delegate
-                        width: parent.width-height/2
-                        text: modelData.menuName
-                        onClicked: {
-                            if (Qt.platform.os === "android")
-                                pluginMainPageLoader.source = "assets:/plugins/" + modelData.pluginName + "/" + modelData.mainPage
-                            else
-                                pluginMainPageLoader.source = "file://" + modelData.pluginName + "/" + modelData.mainPage
-                            internal.selectedPluginIndex = index
-                            drawer.close()
-                        }
+                    onClicked: {
+                        tabBar.currentIndex = index
+                        drawer.close()
                     }
                 }
             }
         }
     }
 
-    Page {
+    SwipeView {
+        id: swipeView
         anchors.fill: parent
-        Loader {
-            anchors.fill: parent
-            id: pluginMainPageLoader
+        currentIndex: tabBar.currentIndex
+        
+        Repeater {
+            model: contents
+            Loader {
+                source: (Qt.platform.os === "android") ?
+                        "assets:/plugins/" + modelData.pluginName + "/" + modelData.mainPage
+                        :
+                        "file://" + modelData.pluginName + "/" + modelData.mainPage
+            }
+        }
+    }
+
+    footer: TabBar {
+        id: tabBar
+        width: parent.width
+        currentIndex: swipeView.currentIndex
+        Repeater {
+            model: contents
+            TabButton { text: modelData.menuName }
         }
     }
 }

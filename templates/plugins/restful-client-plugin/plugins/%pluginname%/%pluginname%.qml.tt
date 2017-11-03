@@ -9,8 +9,9 @@ Item {
     MyStackView {
         anchors.fill: parent
         model: <%= config[:pluginname].downcase.pluralize %>Model.json
-        itemHead: contents[internal.selectedPluginIndex].itemHead
+        itemHead: contents[index].itemHead
         itensPage: "plugins/<%= config[:pluginname].downcase %>/<%= config[:pluginname].downcase %>-detail.qml"
+        icon: contents[index].icon
     }
 
     Settings {

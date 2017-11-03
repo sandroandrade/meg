@@ -2,6 +2,9 @@
     <qresource prefix="/">
         <file>main.qml</file>
         <file>JSONListModel.qml</file>
+        <file>AwesomeToolButton.qml</file>
+        <file>FontAwesome.otf</file>
+        <file>FontAwesome.js</file>
         <file>MyStackView.qml</file>
         <file>qtquickcontrols2.conf</file>
         <file>icons/menu.png</file>

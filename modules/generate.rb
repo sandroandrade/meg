@@ -59,10 +59,6 @@ module Meg
             return
         end
 	directory "../templates/plugins/#{plugintype}/", "#{appdir}/", opts
-	if (!icon.nil?)
-	    `wget https://github.com/google/material-design-icons/raw/master/'#{icon.split('/').first}'/drawable-mdpi/'#{icon.split('/').last}'_white_24dp.png -O '#{appdir}'/icons/'#{icon.split('/').last}'_white.png`
-	    `wget https://github.com/google/material-design-icons/raw/master/'#{icon.split('/').first}'/drawable-mdpi/'#{icon.split('/').last}'_black_24dp.png -O '#{appdir}'/icons/'#{icon.split('/').last}'_black.png`
-	end
     end
 
   end
