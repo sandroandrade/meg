@@ -21,6 +21,10 @@ int main(int argc, char *argv[])
     QDir dir("assets:/plugins");
 #else
     QDir dir(qApp->applicationDirPath());
+    if (!QDir(dir.absolutePath() + "/plugins").exists()){
+        dir.cdUp();
+        dir.cd("/<%= config[:projectname] %>");
+    }
     dir.cd("plugins");
     pluginsAbsolutePath = "file://";
 #endif
