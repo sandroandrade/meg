@@ -1,32 +1,211 @@
 import QtQuick 2.7
-import QtQuick.Controls 2.1
-import QtQuick.Layouts 1.3
+import QtQuick.Controls 2.0
+import QtQuick.Layouts 1.0
+import QtQuick.Dialogs 1.2
+import QtQuick.Layouts 1.1
+import QtQuick.Controls.Material 2.0
+import Components 1.0
 
 Item {
+    id: item
+    states: [
+        State {
+            name: "add"
+            PropertyChanges { target: item;
+                              toolBarConfig: {
+                                  "label": {"text":"Add <%= config[:pluginname].capitalize %>", "bold": false, "color": "white"},
+                                  "toolButton1": {"action":stackView.pop, "icon":"close"},
+                                  "toolButton4": {"action": submit, "icon":"save"}
+                              }
+            }
+        },
+        State {
+            name: "edit"
+            PropertyChanges { target: item;
+                              toolBarConfig: {
+                                  "label": {"text":"Update <%= config[:pluginname].capitalize %>", "bold": false, "color": "white"},
+                                  "toolButton1": {"action":toggleOffEditMode, "icon":"close"},
+                                  "toolButton4": {"action": submit, "icon":"save"}
+                              }
+            }
+        },
+        State {
+            name: "details"
+            PropertyChanges { target: item;
+                              toolBarConfig: {
+                                  "label": {"text":"<%= config[:pluginname].capitalize %> Details", "bold": false, "color": "white"},
+                                  "toolButton1": {"action":stackView.pop, "icon":"close"},
+                                  "toolButton3": {"action": openMessageDialog, "icon":"trash"},
+                                  "toolButton4": {"action": toggleOnEditMode, "icon":"pencil"}
+                              }
+            }
+        }
+    ]
     property var model
+    property bool modelIsEmpty: Object.keys(model).length === 0 && model.constructor === Object
     property StackView stackView
+    property bool editMode: state === "add" || state === "edit"
+    property var toolBarConfig: ({})
+    property var cleanedForm: ({})
+
+    NumberAnimation on x {
+        id: editAnimation
+        from: 100
+        to: 0
+        duration: 300
+        running: false
+    }
+
+    NumberAnimation on opacity {
+        id: cancelAnimation
+        from: 0
+        to: 1
+        duration: 500
+        running: false
+    }
+
+    function toggleOnEditMode() {
+        editAnimation.start()
+        item.state = "edit"
+    }
+
+    function toggleOffEditMode() {
+        cancelAnimation.start()
+        item.state = "details"
+    }
+
+    function openMessageDialog(){
+        deleteDialog.visible = true
+    }
+
+    function is_valid() {
+        var form = [
+        <%- config[:fields].each do |field| -%>
+          {"name": "<%= field.split(':').first %>", "field": <%= field.split(':').first %><%= field.split(':').last.capitalize %>Field, "errorLabel": <%= field.split(':').first %>ErrorLabel}<%= config[:fields].last != field ? "," : "" %>
+        <%- end -%>
+        ]
+        var invalid_fields = 0;
+        for (var i=0; i < form.length; i++) {
+            var field = form[i]["field"]
+            var errorLabel = form[i]["errorLabel"]
+            if (!field.value) {
+                invalid_fields++;
+                errorLabel.visible = true;
+            } else {
+                errorLabel.visible = false;
+                cleanedForm[form[i]["name"]] = field.value;
+            }
+        }
+        return !invalid_fields;
+    }
+
+    function submit() {
+        if (is_valid()) {
+            update<%= config[:pluginname].capitalize %>JsonListModel.load()
+            toggleOffEditMode()
+        }
+    }
+
+    JSONListModel {
+        id: add<%= config[:pluginname].capitalize %>JsonListModel
+        source: internal.baseServer + "/add_<%= config[:pluginname].downcase.pluralize %>"
+        requestObject: cleanedForm
+        requestMethod: "POST"
+        onStateChanged: {
+            if (state === "ready" && httpStatus == 200) {
+               appWindow.eventNotified("update<%= config[:pluginname].capitalize.pluralize %>Model", {})
+               stackView.pop()
+            }
+        }
+    }
+
+    JSONListModel {
+        id: update<%= config[:pluginname].capitalize %>JsonListModel
+        source: internal.baseServer + "/update_<%= config[:pluginname].downcase.pluralize %>/" +  model.id
+        requestObject: cleanedForm
+        requestMethod: "POST"
+        onStateChanged: {
+            if (state === "ready" && httpStatus == 200) {
+                appWindow.eventNotified("update<%= config[:pluginname].capitalize.pluralize %>Model", {})
+            }
+        }
+    }
+
+    JSONListModel {
+        id: delete<%= config[:pluginname].capitalize %>JsonListModel
+        source: internal.baseServer + "/delete_<%= config[:pluginname].downcase.pluralize %>/" +  model.id
+        requestMethod: "POST"
+        onStateChanged: {
+            if (state === "ready" && httpStatus == 200) {
+                appWindow.eventNotified("update<%= config[:pluginname].capitalize.pluralize %>Model", {})
+                stackView.pop()
+            }
+        }
+    }
 
     QtObject {
         id: pluginInternal
         property int padding: 10
     }
 
-    Column {
-        width: parent.width
-        padding: pluginInternal.padding
-        spacing: 15
-        <%- config[:fields].each do |field| -%>
-        GroupBox {
-            title: "<%= field.split(':').first.capitalize %>"
-            width: parent.width-2*pluginInternal.padding
-            Label {
-                text: model["<%= field.split(':').first %>"]
-            }
-        }
-        <%- end -%>
+    BusyIndicator {
+        width: parent.width * 0.20
+        height: parent.width * 0.20
+        anchors.horizontalCenter: parent.horizontalCenter
+        running: update<%= config[:pluginname].capitalize %>JsonListModel.state === "loading"
     }
-    MouseArea {
-        anchors.fill: parent
-        onClicked: stackView.pop()
+
+    Flickable {
+        id: flickable
+        clip: true
+        anchors {
+            fill: parent
+            margins: parent.width * 0.05
+        }
+        flickableDirection: Flickable.VerticalFlick
+        contentHeight: contentColumn.height
+        contentWidth: contentColumn.width
+
+        Column {
+            id: contentColumn
+            width: parent.width
+            padding: pluginInternal.padding
+            spacing: 15
+
+            <%- config[:fields].each do |field| -%>
+
+            Column {
+                width: flickable.width
+
+                Label {
+                    text: "<%= field.split(':').first.capitalize %>"
+                }
+
+                Custom<%= field.split(':').last == "string" ? "Text" : "Date" %>Field {
+                    id: <%= field.split(':').first %><%= field.split(':').last.capitalize %>Field
+                    width: parent.width
+                    text: modelIsEmpty ? "" : model["<%= field.split(':').first %>"]
+                    readOnly: !editMode
+                }
+
+                Label {
+                    id: <%= field.split(':').first %>ErrorLabel
+                    font.pixelSize: 10
+                    color: "red"
+                    text: "cannot be blank"
+                    visible: false
+                }
+            }
+            <%- end -%>
+        }
+    }
+
+    Dialog {
+        id: deleteDialog
+        standardButtons: StandardButton.Ok | StandardButton.Cancel
+        title: "Do you really want to delete it?"
+        onAccepted: {
+            delete<%= config[:pluginname].capitalize %>JsonListModel.load()
+        }
     }
 }
