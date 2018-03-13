@@ -101,7 +101,10 @@ Item {
 
     function submit() {
         if (is_valid()) {
-            update<%= config[:pluginname].capitalize %>JsonListModel.load()
+            if (state === "add")
+                add<%= config[:pluginname].capitalize %>JsonListModel.load()
+            else
+                update<%= config[:pluginname].capitalize %>JsonListModel.load()
             toggleOffEditMode()
         }
     }
