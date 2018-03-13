@@ -5,9 +5,9 @@ Item {
 
     property string source
     property string requestMethod: "GET"
-    property string requestParams
+    property var requestObject
     property string errorString: ""
-    property int httpStatus: 0
+    property int httpStatus: 0    
 
     property var json
 
@@ -20,11 +20,11 @@ Item {
     ]
 
     function load() {
-        var xhr = new XMLHttpRequest;
-        xhr.open(requestMethod, (requestMethod === "GET") ? source + "?" + requestParams : source);
-        xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+        var xhr = new XMLHttpRequest;        
+        xhr.open(requestMethod, source);
+        xhr.setRequestHeader('Content-type', 'application/json');
         xhr.onerror = function() {
-            rootItem.errorString = qsTr("Cannot connect to server!");
+            rootItem.errorString = qsTr("Cannot connect to server!");            
             rootItem.state = "error";
         }
         xhr.onreadystatechange = function() {
@@ -43,6 +43,6 @@ Item {
         rootItem.errorString = ""
         rootItem.state = "loading";
         json = undefined
-        xhr.send(requestParams); // requestParams ignored if requestMethod equals GET
+        xhr.send(JSON.stringify(requestObject)); // requestParams ignored if requestMethod equals GET
     }
 }

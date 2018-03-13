@@ -16,13 +16,15 @@ int main(int argc, char *argv[])
     QGuiApplication app(argc, argv);
 
     QQuickStyle::setStyle("Material");
-
+    QString pluginsAbsolutePath;
 #ifdef Q_OS_ANDROID
     QDir dir("assets:/plugins");
 #else
     QDir dir(qApp->applicationDirPath());
     dir.cd("plugins");
+    pluginsAbsolutePath = "file://";
 #endif
+    pluginsAbsolutePath += dir.absolutePath();
     QString contents;
     QJsonArray mergedArray;
     foreach(const QString &fileName, dir.entryList(QStringList() << "*.json")) {
@@ -41,6 +43,8 @@ int main(int argc, char *argv[])
     }
 
     QQmlApplicationEngine engine;
+    engine.addImportPath("qrc:/modules/");
+    engine.rootContext()->setContextProperty("pluginsDir", pluginsAbsolutePath);
     engine.rootContext()->setContextProperty("contents", mergedArray);
     engine.load(QUrl(QLatin1String("qrc:/main.qml")));
 

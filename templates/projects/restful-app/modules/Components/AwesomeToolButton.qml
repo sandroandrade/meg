@@ -3,7 +3,7 @@ import QtQuick.Controls 2.1
 import QtQuick.Controls.Material 2.1
 
 ToolButton {
-    id: control
+    id: control    
     font { family: fontAwesome.name; pointSize: 14 }
     contentItem: Text {
         text: control.text

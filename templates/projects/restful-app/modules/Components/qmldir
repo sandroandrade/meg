@@ -1,0 +1,7 @@
+module Components
+JSONListModel 1.0 JSONListModel.qml
+AwesomeToolButton 1.0 AwesomeToolButton.qml
+MyStackView 1.0 MyStackView.qml
+CustomToolBar 1.0 CustomToolBar.qml
+CustomTextField 1.0 CustomTextField.qml
+CustomDateField 1.0 CustomDateField.qml
