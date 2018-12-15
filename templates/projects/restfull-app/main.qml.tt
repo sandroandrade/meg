@@ -1,0 +1,111 @@
+import QtQuick 2.7
+import QtQuick.Controls 2.1
+import QtQuick.Layouts 1.3
+import QtQuick.Controls.Material 2.1
+import Qt.labs.settings 1.0
+
+import Components 1.0 as Components
+import Awesome 1.0
+
+ApplicationWindow {
+    id: appWindow
+
+    property QtObject currentPage: mainStack.currentItem
+    property alias toast: toast
+    property bool showDrawer: true
+
+    signal eventNotified(string eventName, var eventData)
+    <% if config[:authentication] %>
+    signal login()
+    signal logout()
+
+    function clearSettings(){
+        settings.authenticated = false
+        settings.base64StringOfUserColonPassword = ""
+        settings.authToken = ""
+    }
+
+    onLogin: {        
+        settings.authenticated = true
+
+        if (Object.keys(core.homePlugin()).length === 0 && core.homePlugin().constructor === Object)
+            mainStack.push(Qt.resolvedUrl("modules/Components/EmptyPage.qml"), {"text":"There's no home page setted"})
+        else
+            mainStack.push(core.homePlugin().pluginDir + "/" + core.homePlugin().mainPage)
+    }
+
+    onLogout: {
+        clearSettings()
+        mainStack.clear()
+        mainStack.push(core.authPlugin().pluginDir + "/" + core.authPlugin().mainPage)
+    }
+    <% end %>
+
+    visible: true
+    width: 360
+    height: 640
+    title: qsTr("fullApp")
+
+    Material.primary: "#05070d"
+    Material.foreground: "#05070d"
+    Material.accent: "#41cd52"
+
+    FontLoader { id: fontAwesome; source: Qt.resolvedUrl("modules/Awesome/FontAwesome.otf") }
+
+    QtObject {
+        id: internal
+        property string baseServer: "you need to fill this field"
+//        property string baseServer: "http://127.0.0.1:5000"
+    }    
+
+    Settings {
+        id: settings
+        <% if config[:authentication] %>
+        property bool authenticated
+        property string authToken
+        property string base64StringOfUserColonPassword
+        <% end %>
+    }
+
+    Loader {
+       id: toolbarLoader
+       active: <% if config[:authentication] %>settings.authenticated<% else %>true<% end %>
+       source: Qt.resolvedUrl("modules/Components/CustomToolBar.qml")
+       onStatusChanged: if (toolbarLoader.status === Loader.Ready) appWindow.header = toolbarLoader.item
+       onActiveChanged: if (toolbarLoader.active === false) appWindow.header = null
+    }
+
+    Loader {
+       id: drawerLoader
+       active: showDrawer
+       source: Qt.resolvedUrl("modules/Components/Drawer.qml")
+    }
+
+    StackView {
+        id: mainStack
+        anchors.fill: parent
+    }
+
+    Components.ToastManager {
+        id: toast
+    }
+
+    Component.onCompleted: {        
+        <% if config[:authentication] %>if (settings.authenticated) {
+            if (Object.keys(core.homePlugin()).length === 0 && core.homePlugin().constructor === Object)
+                mainStack.push(Qt.resolvedUrl("modules/Components/EmptyPage.qml"), {"text":"There's no home page setted"})
+            else
+                mainStack.push(core.homePlugin().pluginDir + "/" + core.homePlugin().mainPage)
+        }
+        else {
+            if (Object.keys(core.authPlugin()).length === 0 && core.authPlugin().constructor === Object)
+                mainStack.push(Qt.resolvedUrl("modules/Components/EmptyPage.qml"), {"text":"There's no auth plugin setted"})
+            else
+                mainStack.push(core.authPlugin().pluginDir + "/" + core.authPlugin().mainPage)
+        }
+        <% else %>if (Object.keys(core.homePlugin()).length === 0 && core.homePlugin().constructor === Object)
+            mainStack.push(Qt.resolvedUrl("modules/Components/EmptyPage.qml"))
+        else
+            mainStack.push(core.homePlugin().pluginDir + "/" + core.homePlugin().mainPage)<% end %>
+    }
+}
