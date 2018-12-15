@@ -1,0 +1,74 @@
+import QtQuick 2.7
+import QtQuick.Controls 2.1
+import Qt.labs.settings 1.0
+import Components 1.0
+import Awesome 1.0
+
+Item {
+    property var toolBarConfig: {
+        "label": {"text": "<%= config[:pluginname].capitalize.pluralize %>", "bold": false, "color": "white"},
+        "toolButton1": {"action": function(){ return appWindow.eventNotified("openDrawer", {}); }, "icon": "bars"},
+        "toolButton4": {"action": <%= config[:pluginname].downcase.pluralize %>JsonListModel.load, "icon": "refresh"}
+    }
+
+    Connections {
+        target: appWindow
+        onEventNotified: {
+            if (eventName === "update<%= config[:pluginname].capitalize.pluralize %>Model"){
+                <%= config[:pluginname].downcase.pluralize %>JsonListModel.load()
+            }
+        }
+    }
+
+    JSONListModel {
+        id: <%= config[:pluginname].downcase %>JsonListModel
+        source: internal.baseServer + "/<%= config[:pluginname].downcase.pluralize %>"
+        onStateChanged: {
+            if (state === "ready" && httpStatus == 200) {
+               settings.<%= config[:pluginname].downcase.pluralize %>Model = json
+            }
+        }
+    }
+
+    Settings {
+        id: settings
+        property var <%= config[:pluginname].downcase.pluralize %>Model
+    }
+
+    BusyIndicator {
+        width: parent.width * 0.20
+        height: parent.width * 0.20
+        anchors.centerIn: parent
+        running: <%= config[:pluginname].downcase.pluralize %>JsonListModel.state === "loading"
+    }    
+    
+    MyStackView {
+        id: _stackView
+        visible: <%= config[:pluginname].downcase.pluralize %>JsonListModel.state !== "loading"
+        anchors.fill: parent
+        model: settings.<%= config[:pluginname].downcase.pluralize %>Model
+        itemHead: core.swipeViewPlugins()[index].itemHead
+        itensPage: core.pluginsDir() + "/<%= config[:pluginname].downcase.pluralize %>/<%= config[:pluginname].downcase.pluralize %>-detail.qml"
+        icon: core.swipeViewPlugins()[index].position
+    }
+
+    RoundButton {
+        text: FontAwesome.icons["plus"]
+        radius: 200; width: 50; height: width
+        visible: _stackView.depth <= 1
+        anchors {
+                bottom: parent.bottom
+                bottomMargin: 16
+                right: parent.right
+                rightMargin: 16
+        }
+        onClicked: {
+            _stackView.push(_stackView.itensPage, {"stackView": _stackView, "state": "add", "model": ({}) })
+        }
+    }
+
+    Component.onCompleted: {
+        if (settings.<%= config[:pluginname].downcase.pluralize %>Model === undefined)
+            <%= config[:pluginname].downcase.pluralize %>JsonListModel.load()
+    }
+}
