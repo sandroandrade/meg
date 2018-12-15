@@ -64,14 +64,12 @@ Item {
         running: false
     }
 
-    function toggleOnEditMode() {
-        editAnimation.start()
-        item.state = "edit"
+    function toggleOnEditMode() {    
+        stackView.push(itensPage, { "model": stackView.model[index], "stackView": stackView, "state": "edit" })
     }
 
-    function toggleOffEditMode() {
-        cancelAnimation.start()
-        item.state = "details"
+    function toggleOffEditMode() {        
+        stackView.pop()
     }
 
     function openMessageDialog(){

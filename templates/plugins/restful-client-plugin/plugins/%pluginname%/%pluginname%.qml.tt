@@ -1,15 +1,25 @@
 import QtQuick 2.7
-import QtQuick.Controls 2.1
-import Qt.labs.settings 1.0
-import Components 1.0
-import Awesome 1.0
+import QtQuick.Controls 2.0
+import QtQuick.Layouts 1.0
+import QtQuick.Dialogs 1.2
+import QtQuick.Layouts 1.1
+import QtQuick.Controls.Material 2.0
+import Components 1.0 as Components
 
-Item {
-    property var toolBarConfig: {
-        "label": {"text": "<%= config[:pluginname].capitalize.pluralize %>", "bold": false, "color": "white"},
-        "toolButton1": {"action": function(){ return appWindow.eventNotified("openDrawer", {}); }, "icon": "bars"},
-        "toolButton4": {"action": <%= config[:pluginname].downcase.pluralize %>JsonListModel.load, "icon": "refresh"}
+Item {            
+    property string searchText
+    property string toolBarState: "normal"
+    property var topLeft: {"action": function(){ return appWindow.eventNotified("openDrawer", {}); }, "icon": "bars"}
+    property var topRightCenter: {
+        if (toolBarState === "normal") {
+            return {"action": function(){ return appWindow.eventNotified("changeToolBarState", {"state": "search"}); }, "icon": "search"}
+        } else {
+            return {"action": function(){ return appWindow.eventNotified("changeToolBarState", {"state": "normal"}); }, "icon": "close"}
+        }
     }
+    property var topRight: {"action": conferencesJsonListModel.load, "icon": "refresh"}
+    property string toolBarText: "Conferences"
+    property string pageName: "conferences.qml"
 
     Connections {
         target: appWindow
@@ -40,16 +50,16 @@ Item {
         height: parent.width * 0.20
         anchors.centerIn: parent
         running: <%= config[:pluginname].downcase.pluralize %>JsonListModel.state === "loading"
-    }
-
+    }    
+    
     MyStackView {
         id: _stackView
         visible: <%= config[:pluginname].downcase.pluralize %>JsonListModel.state !== "loading"
         anchors.fill: parent
         model: settings.<%= config[:pluginname].downcase.pluralize %>Model
-        itemHead: contents[index].itemHead
-        itensPage: pluginsDir + "/<%= config[:pluginname].downcase.pluralize %>/<%= config[:pluginname].downcase.pluralize %>-detail.qml"
-        icon: contents[index].icon
+        itemHead: core.swipeViewPlugins()[index].itemHead
+        itensPage: core.pluginsDir() + "/<%= config[:pluginname].downcase.pluralize %>/<%= config[:pluginname].downcase.pluralize %>-detail.qml"
+        icon: core.swipeViewPlugins()[index].position
     }
 
     RoundButton {
