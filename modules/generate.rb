@@ -30,7 +30,7 @@ module Meg
 
     no_tasks do
         def pluginname
-            @pluginname.downcase.pluralize
+            @pluginname.downcase
 	end
 	def nowformated
 	    Time.now.strftime('%Y%m%d%H%M%S')
@@ -40,15 +40,15 @@ module Meg
     method_option :plugintype, :type => :string, :aliases => "-t", :default => "basic-plugin"
     method_option :appdir, :type => :string, :aliases => "-a", :required => true
     method_option :itemhead, :type => :string, :aliases => "-i"
-    method_option :icon, :type => :string, :aliases => "-c"
+    method_option :icon, :type => :string, :aliases => "-c"    
     desc "plugin PLUGINNAME", "Generates a new plugin named PLUGINNAME"
     def plugin(pluginname, *fields)
 	self.pluginname = pluginname
 	plugintype = options[:plugintype]
 	appdir = options[:appdir]
 	itemhead = options[:itemhead]
-	icon = options[:icon]
-	opts = { :pluginname => pluginname, :fields => fields, :itemhead => itemhead, :icon => icon }
+	icon = options[:icon]    
+	opts = { :pluginname => pluginname, :fields => fields, :itemhead => itemhead, :icon => icon}
         puts "Generating '#{plugintype}' plugin '#{pluginname}' for application '#{appdir}' with item head '#{itemhead}'"
 	if (!File.directory?("#{appdir}"))
             raise Thor::Error, "No application '#{appdir}' has been found"

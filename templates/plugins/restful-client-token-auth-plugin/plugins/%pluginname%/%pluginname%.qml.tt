@@ -1,0 +1,126 @@
+import QtQuick 2.7
+import QtQuick.Controls 2.1
+import Qt.labs.settings 1.0
+import Components 1.0 as Components
+import Awesome 1.0
+import com.meg.filterproxymodel 1.0
+import com.meg.meglistmodel 1.0
+
+Item {
+    property string searchText
+    property string toolBarState: "normal"
+    property var topLeft: {"action": function(){ return appWindow.eventNotified("openDrawer", {}); }, "icon": "bars"}
+    property var topRightCenter: {
+        if (toolBarState === "normal") {
+            return {"action": function(){ return appWindow.eventNotified("changeToolBarState", {"state": "search"}); }, "icon": "search"}
+        } else {
+            return {"action": function(){ return appWindow.eventNotified("changeToolBarState", {"state": "normal"}); }, "icon": "close"}
+        }
+    }
+    property var topRight: {"action": <%= config[:pluginname].downcase.pluralize %>JsonListModel.load, "icon": "refresh"}
+    property string toolBarText: "<%= config[:pluginname].capitalize.pluralize %>"
+    property string pageName: "<%= config[:pluginname].downcase.pluralize %>.qml"
+
+    onSearchTextChanged: {        
+        filterProxyModel.setFilterString(searchText)
+    }
+
+    Connections {
+        target: appWindow
+        onEventNotified: {
+            if (eventName === "update<%= config[:pluginname].capitalize.pluralize %>Model"){
+                <%= config[:pluginname].downcase.pluralize %>JsonListModel.load()
+            } else if (eventName === "changeToolBarState") {
+                toolBarState = eventData["state"]
+            }
+        }
+    }
+
+    Components.JSONListModel {
+        id: revalidateTokenJsonListModel
+        source: internal.baseServer + "/api/token"
+        requestMethod: "GET"
+        additionalHeaders: [{"key": "Authorization", "value": "Basic " + settings.base64StringOfUserColonPassword }]
+        onStateChanged: {
+            if (state === "ready" && httpStatus == 200) {
+                settings.authToken = revalidateTokenJsonListModel.json["token"]
+                <%= config[:pluginname].downcase.pluralize %>JsonListModel.load()
+            } else if (state === "error") {
+                //show toast with error message here
+            }
+        }
+    }
+
+    Components.JSONListModel {
+        id: <%= config[:pluginname].downcase.pluralize %>JsonListModel
+        source: internal.baseServer + "/conferences"
+        model: jsonModel
+        additionalHeaders: [{"key": "Authorization", "value": "Token " + settings.authToken}]
+        onStateChanged: {
+            if (state === "ready" && httpStatus == 200) {
+                <%= config[:pluginname].downcase.pluralize %>Settings.conferencesModel = json
+            } else if (state === "error" && httpStatus == 401) {
+                revalidateTokenJsonListModel.load()
+            }
+        }
+    }
+
+    Settings {
+        id: <%= config[:pluginname].downcase.pluralize %>Settings
+        property var <%= config[:pluginname].downcase.pluralize %>Model
+        on<%= config[:pluginname].capitalize.pluralize %>ModelChanged: toast.show("<%= config[:pluginname].downcase.pluralize %> list refreshed")
+    }
+
+    MegListModel {
+        id: jsonModel
+    }
+
+    FilterProxyModel {
+        id:filterProxyModel
+        source: jsonModel
+        filterRoleName: "name"
+    }
+
+    BusyIndicator {
+        id: busyIndicator
+        width: parent.width * 0.20
+        height: parent.width * 0.20
+        anchors.centerIn: parent
+        running: <%= config[:pluginname].downcase.pluralize %>JsonListModel.state === "loading"|| revalidateTokenJsonListModel.state === "loading"
+    }
+    
+    Components.ListView {
+        id: listView
+        anchors.fill: parent
+        visible: true
+        titleField: "name"
+        awesomeIcon: "university"
+        detailPage: core.pluginsDir() + "/<%= config[:pluginname].downcase %>/<%= config[:pluginname].downcase %>-detail.qml"
+        showEmptyLabel: !busyIndicator.running
+        listModel: filterProxyModel
+        onItemClicked: {
+            mainStack.push(detailPage, {"modelIndex": dataIndex.id, "model": dataIndex, "state": "edit"})
+        }
+    }
+
+    RoundButton {
+        text: FontAwesome.icons["plus"]
+        radius: 200; width: 50; height: width        
+        anchors {
+            bottom: parent.bottom
+            bottomMargin: 16
+            right: parent.right
+            rightMargin: 16
+        }
+        onClicked: {
+            mainStack.push(core.pluginsDir() + "/<%= config[:pluginname].downcase %>/<%= config[:pluginname].downcase %>-detail.qml", {"state": "add", "model": ({})})
+        }
+    }
+
+    Component.onCompleted: {
+        if (<%= config[:pluginname].downcase.pluralize %>Settings.<%= config[:pluginname].downcase.pluralize %>Model)
+            <%= config[:pluginname].downcase.pluralize %>JsonListModel.json = <%= config[:pluginname].downcase.pluralize %>Settings.<%= config[:pluginname].downcase.pluralize %>Model
+        else
+            <%= config[:pluginname].downcase.pluralize %>JsonListModel.load()
+    }
+}

@@ -1,0 +1,10 @@
+module Components
+JSONListModel 1.0 JSONListModel.qml
+AwesomeToolButton 1.0 AwesomeToolButton.qml
+ListView 1.0 ListView.qml
+CustomToolBar 1.0 CustomToolBar.qml
+CustomTextField 1.0 CustomTextField.qml
+CustomDateField 1.0 CustomDateField.qml
+MainPage 1.0 MainPage.qml
+Drawer 1.0 Drawer.qml
+ToastManager 1.0 ToastManager.qml

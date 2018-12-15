@@ -1,0 +1,12 @@
+{
+    "name": "<%= config[:pluginname] %>",
+    "type": "auth",
+    "mainPage": "login.qml",
+    "authPlugin": true,
+    "menuName": "Logout",
+    "icon": "sign-out",
+    "drawerPage": "logout.qml",
+    "showInSwipeView": false,
+    "showInDrawer": true,
+    "drawerPosition": 4
+}

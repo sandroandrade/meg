@@ -182,7 +182,7 @@ Item {
                     text: "<%= field.split(':').first.capitalize %>"
                 }
 
-                Custom<%= field.split(':').last == "string" ? "Text" : "Date" %>Field {
+                Components.Custom<%= field.split(':').last == "string" ? "Text" : "Date" %>Field {
                     id: <%= field.split(':').first %><%= field.split(':').last.capitalize %>Field
                     width: parent.width
                     text: modelIsEmpty ? "" : model["<%= field.split(':').first %>"]

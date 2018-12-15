@@ -1,0 +1,102 @@
+#include "core.h"
+#include "pluginloader.h"
+<% if config[:authentication] %>#include "authpluginmanager.h"<% end %>
+#include "drawerpluginmanager.h"
+#include "swipeviewpluginmanager.h"
+#include "filterproxymodel.h"
+#include "meglistmodel.h"
+
+#include <QDir>
+#include <QDebug>
+#include <QFile>
+#include <QDir>
+#include <QStandardPaths>
+#include <QJsonDocument>
+#include <QGuiApplication>
+#include <QQmlEngine>
+
+Core::Core(QObject *parent):QObject(parent)
+{        
+    loadCoreConfig();
+    m_pluginLoader = new PluginLoader(this);
+    <% if config[:authentication] %>m_authPluginManager = new AuthPluginManager(this);<% end %>
+    m_drawerPluginManager = new DrawerPluginManager(this);
+    m_swipeViewPluginManager = new SwipeViewPluginManager(this);
+}
+
+Core::~Core()
+{
+    delete m_pluginLoader;
+    <% if config[:authentication] %>delete m_authPluginManager;<% end %>
+    delete m_drawerPluginManager;
+    delete m_swipeViewPluginManager;
+}
+
+void Core::initialize()
+{
+    <% if config[:authentication] %>m_authPluginManager->loadConfig();<% end %>
+    m_drawerPluginManager->loadConfig();
+    m_swipeViewPluginManager->loadConfig();
+
+    qmlRegisterType<FilterProxyModel>("com.meg.filterproxymodel", 1, 0, "FilterProxyModel");
+    qmlRegisterType<MegListModel>("com.meg.meglistmodel", 1, 0, "MegListModel");
+}
+
+QJsonArray Core::pluginsConfig() const
+{
+    return m_pluginLoader->pluginsConfig();
+}
+<% if config[:authentication] %>
+QJsonObject Core::authPlugin() const
+{    
+    for(QJsonValue jsonValue : m_authPluginManager->config())
+    {
+        QJsonObject jsonObject = jsonValue.toObject();
+        if (jsonObject["name"].toString() == m_coreConfig.value("activeAuthPlugin").toString())
+        {
+            return jsonObject;
+        }
+    }
+    return QJsonObject();
+}
+<% end %>
+QJsonObject Core::coreConfig() const
+{
+    return m_coreConfig;
+}
+
+QJsonObject Core::homePlugin() const
+{
+    for(QJsonValue jsonValue : pluginsConfig())
+    {
+        QJsonObject jsonObject = jsonValue.toObject();
+        if (jsonObject.contains("homePlugin") && jsonObject["homePlugin"].toBool() == true)
+        {
+            return jsonObject;
+        }
+    }
+    return QJsonObject();
+}
+
+
+QJsonArray Core::drawerPlugins() const
+{
+    return m_drawerPluginManager->config();
+}
+
+QString Core::pluginsDir() const
+{
+    return m_pluginLoader->pluginsDir();
+}
+
+QJsonArray Core::swipeViewPlugins() const
+{
+    return m_swipeViewPluginManager->config();
+}
+
+void Core::loadCoreConfig()
+{    
+    QFile jsonFile(":/core.json");
+    jsonFile.open(QIODevice::ReadOnly);
+    m_coreConfig = QJsonDocument::fromJson(jsonFile.readAll()).object();
+}

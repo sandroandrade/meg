@@ -4,72 +4,43 @@ import QtQuick.Layouts 1.0
 import QtQuick.Dialogs 1.2
 import QtQuick.Layouts 1.1
 import QtQuick.Controls.Material 2.0
-import Components 1.0
+import Components 1.0 as Components
 
 Item {
     id: item
     states: [
         State {
             name: "add"
-            PropertyChanges { target: item;
-                              toolBarConfig: {
-                                  "label": {"text":"Add <%= config[:pluginname].capitalize %>", "bold": false, "color": "white"},
-                                  "toolButton1": {"action":stackView.pop, "icon":"close"},
-                                  "toolButton4": {"action": submit, "icon":"save"}
-                              }
-            }
+            PropertyChanges { target: item
+                              topLeft: {"action":mainStack.pop, "icon":"close"}
+                              topRight: {"action": submit, "icon":"save"}
+                              toolBarText: "Add <%= config[:pluginname].capitalize %>"
+                              rest_client: add<%= config[:pluginname].capitalize.pluralize %>JsonListModel}
         },
         State {
             name: "edit"
-            PropertyChanges { target: item;
-                              toolBarConfig: {
-                                  "label": {"text":"Update <%= config[:pluginname].capitalize %>", "bold": false, "color": "white"},
-                                  "toolButton1": {"action":toggleOffEditMode, "icon":"close"},
-                                  "toolButton4": {"action": submit, "icon":"save"}
-                              }
-            }
-        },
-        State {
-            name: "details"
-            PropertyChanges { target: item;
-                              toolBarConfig: {
-                                  "label": {"text":"<%= config[:pluginname].capitalize %> Details", "bold": false, "color": "white"},
-                                  "toolButton1": {"action":stackView.pop, "icon":"close"},
-                                  "toolButton3": {"action": openMessageDialog, "icon":"trash"},
-                                  "toolButton4": {"action": toggleOnEditMode, "icon":"pencil"}
-                              }
-            }
+            PropertyChanges { target: item
+                              topLeft: {"action":toggleOffEditMode, "icon":"close"}
+                              topRightCenter: {"action": openMessageDialog, "icon":"trash"}
+                              topRight:{"action": submit, "icon":"save"}
+                              toolBarText: "Edit <%= config[:pluginname].capitalize %>"
+                              rest_client: update<%= config[:pluginname].capitalize.pluralize %>JsonListModel}
         }
     ]
+    
+    property Components.JSONListModel rest_client
     property var model
-    property bool modelIsEmpty: Object.keys(model).length === 0 && model.constructor === Object
-    property StackView stackView
+    property int modelIndex
+    property bool modelIsEmpty: Object.keys(model).length === 0 && model.constructor === Object    
     property bool editMode: state === "add" || state === "edit"
-    property var toolBarConfig: ({})
+    property var topLeft: ({})
+    property var topRightCenter: ({})
+    property var topRight: ({})
+    property string toolBarText
     property var cleanedForm: ({})
 
-    NumberAnimation on x {
-        id: editAnimation
-        from: 100
-        to: 0
-        duration: 300
-        running: false
-    }
-
-    NumberAnimation on opacity {
-        id: cancelAnimation
-        from: 0
-        to: 1
-        duration: 500
-        running: false
-    }
-
-    function toggleOnEditMode() {    
-        stackView.push(itensPage, { "model": stackView.model[index], "stackView": stackView, "state": "edit" })
-    }
-
-    function toggleOffEditMode() {        
-        stackView.pop()
+    function toggleOffEditMode() {
+        mainStack.pop()
     }
 
     function openMessageDialog(){
@@ -99,47 +70,46 @@ Item {
 
     function submit() {
         if (is_valid()) {
-            if (state === "add")
-                add<%= config[:pluginname].capitalize %>JsonListModel.load()
-            else
-                update<%= config[:pluginname].capitalize %>JsonListModel.load()
-            toggleOffEditMode()
+            rest_client.requestObject = cleanedForm
+            rest_client.load()
         }
     }
 
-    JSONListModel {
-        id: add<%= config[:pluginname].capitalize %>JsonListModel
-        source: internal.baseServer + "/add_<%= config[:pluginname].downcase.pluralize %>"
-        requestObject: cleanedForm
+    Components.JSONListModel {
+        id: add<%= config[:pluginname].capitalize.pluralize %>JsonListModel
+        source: internal.baseServer + "/add_conferences"
         requestMethod: "POST"
         onStateChanged: {
             if (state === "ready" && httpStatus == 200) {
+               toast.show("New <%= config[:pluginname].downcase %> added")
+               mainStack.pop()
                appWindow.eventNotified("update<%= config[:pluginname].capitalize.pluralize %>Model", {})
-               stackView.pop()
             }
         }
     }
 
-    JSONListModel {
-        id: update<%= config[:pluginname].capitalize %>JsonListModel
-        source: internal.baseServer + "/update_<%= config[:pluginname].downcase.pluralize %>/" +  model.id
-        requestObject: cleanedForm
+    Components.JSONListModel {
+        id: update<%= config[:pluginname].capitalize.pluralize %>JsonListModel
+        source: internal.baseServer + "/update_<%= config[:pluginname].downcase.pluralize %>/" +  modelIndex
         requestMethod: "POST"
         onStateChanged: {
             if (state === "ready" && httpStatus == 200) {
+                toast.show("<%= config[:pluginname].capitalize %> " + nameStringField.text + " updated")
                 appWindow.eventNotified("update<%= config[:pluginname].capitalize.pluralize %>Model", {})
+                mainStack.pop()
             }
         }
     }
 
-    JSONListModel {
-        id: delete<%= config[:pluginname].capitalize %>JsonListModel
-        source: internal.baseServer + "/delete_<%= config[:pluginname].downcase.pluralize %>/" +  model.id
+    Components.JSONListModel {
+        id: delete<%= config[:pluginname].capitalize.pluralize %>JsonListModel
+        source: internal.baseServer + "/delete_<%= config[:pluginname].downcase.pluralize %>/" +  modelIndex
         requestMethod: "POST"
         onStateChanged: {
             if (state === "ready" && httpStatus == 200) {
+                toast.show("<%= config[:pluginname].capitalize %> " + nameStringField.text + " deleted")
                 appWindow.eventNotified("update<%= config[:pluginname].capitalize.pluralize %>Model", {})
-                stackView.pop()
+                mainStack.pop()
             }
         }
     }
@@ -153,7 +123,7 @@ Item {
         width: parent.width * 0.20
         height: parent.width * 0.20
         anchors.horizontalCenter: parent.horizontalCenter
-        running: update<%= config[:pluginname].capitalize %>JsonListModel.state === "loading"
+        running: update<%= config[:pluginname].capitalize.pluralize %>JsonListModel.state === "loading"
     }
 
     Flickable {
@@ -182,7 +152,7 @@ Item {
                     text: "<%= field.split(':').first.capitalize %>"
                 }
 
-                Custom<%= field.split(':').last == "string" ? "Text" : "Date" %>Field {
+                Components.Custom<%= field.split(':').last == "string" ? "Text" : "Date" %>Field {
                     id: <%= field.split(':').first %><%= field.split(':').last.capitalize %>Field
                     width: parent.width
                     text: modelIsEmpty ? "" : model["<%= field.split(':').first %>"]
@@ -200,13 +170,13 @@ Item {
             <%- end -%>
         }
     }
-
+    
     Dialog {
         id: deleteDialog
         standardButtons: StandardButton.Ok | StandardButton.Cancel
         title: "Do you really want to delete it?"
         onAccepted: {
-            delete<%= config[:pluginname].capitalize %>JsonListModel.load()
+            delete<%= config[:pluginname].capitalize.pluralize %>JsonListModel.load()
         }
-    }
+    }    
 }
