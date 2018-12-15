@@ -1,0 +1,182 @@
+import QtQuick 2.7
+import QtQuick.Controls 2.0
+import QtQuick.Layouts 1.0
+import QtQuick.Dialogs 1.2
+import QtQuick.Layouts 1.1
+import QtQuick.Controls.Material 2.0
+import Components 1.0 as Components
+
+Item {
+    id: item
+    states: [
+        State {
+            name: "add"
+            PropertyChanges { target: item
+                              topLeft: {"action":mainStack.pop, "icon":"close"}
+                              topRight: {"action": submit, "icon":"save"}
+                              toolBarText: "Add <%= config[:pluginname].capitalize %>"
+                              rest_client: add<%= config[:pluginname].capitalize.pluralize %>JsonListModel}
+        },
+        State {
+            name: "edit"
+            PropertyChanges { target: item
+                              topLeft: {"action":toggleOffEditMode, "icon":"close"}
+                              topRightCenter: {"action": openMessageDialog, "icon":"trash"}
+                              topRight:{"action": submit, "icon":"save"}
+                              toolBarText: "Edit <%= config[:pluginname].capitalize %>"
+                              rest_client: update<%= config[:pluginname].capitalize.pluralize %>JsonListModel}
+        }
+    ]
+    
+    property Components.JSONListModel rest_client
+    property var model
+    property int modelIndex
+    property bool modelIsEmpty: Object.keys(model).length === 0 && model.constructor === Object    
+    property bool editMode: state === "add" || state === "edit"
+    property var topLeft: ({})
+    property var topRightCenter: ({})
+    property var topRight: ({})
+    property string toolBarText
+    property var cleanedForm: ({})
+
+    function toggleOffEditMode() {
+        mainStack.pop()
+    }
+
+    function openMessageDialog(){
+        deleteDialog.visible = true
+    }
+
+    function is_valid() {
+        var form = [
+        <%- config[:fields].each do |field| -%>
+          {"name": "<%= field.split(':').first %>", "field": <%= field.split(':').first %><%= field.split(':').last.capitalize %>Field, "errorLabel": <%= field.split(':').first %>ErrorLabel}<%= config[:fields].last != field ? "," : "" %>
+        <%- end -%>
+        ]
+        var invalid_fields = 0;
+        for (var i=0; i < form.length; i++) {
+            var field = form[i]["field"]
+            var errorLabel = form[i]["errorLabel"]
+            if (!field.value) {
+                invalid_fields++;
+                errorLabel.visible = true;
+            } else {
+                errorLabel.visible = false;
+                cleanedForm[form[i]["name"]] = field.value;
+            }
+        }
+        return !invalid_fields;
+    }
+
+    function submit() {
+        if (is_valid()) {
+            rest_client.requestObject = cleanedForm
+            rest_client.load()
+        }
+    }
+
+    Components.JSONListModel {
+        id: add<%= config[:pluginname].capitalize.pluralize %>JsonListModel
+        source: internal.baseServer + "/add_conferences"
+        requestMethod: "POST"
+        onStateChanged: {
+            if (state === "ready" && httpStatus == 200) {
+               toast.show("New <%= config[:pluginname].downcase %> added")
+               mainStack.pop()
+               appWindow.eventNotified("update<%= config[:pluginname].capitalize.pluralize %>Model", {})
+            }
+        }
+    }
+
+    Components.JSONListModel {
+        id: update<%= config[:pluginname].capitalize.pluralize %>JsonListModel
+        source: internal.baseServer + "/update_<%= config[:pluginname].downcase.pluralize %>/" +  modelIndex
+        requestMethod: "POST"
+        onStateChanged: {
+            if (state === "ready" && httpStatus == 200) {
+                toast.show("<%= config[:pluginname].capitalize %> " + nameStringField.text + " updated")
+                appWindow.eventNotified("update<%= config[:pluginname].capitalize.pluralize %>Model", {})
+                mainStack.pop()
+            }
+        }
+    }
+
+    Components.JSONListModel {
+        id: delete<%= config[:pluginname].capitalize.pluralize %>JsonListModel
+        source: internal.baseServer + "/delete_<%= config[:pluginname].downcase.pluralize %>/" +  modelIndex
+        requestMethod: "POST"
+        onStateChanged: {
+            if (state === "ready" && httpStatus == 200) {
+                toast.show("<%= config[:pluginname].capitalize %> " + nameStringField.text + " deleted")
+                appWindow.eventNotified("update<%= config[:pluginname].capitalize.pluralize %>Model", {})
+                mainStack.pop()
+            }
+        }
+    }
+
+    QtObject {
+        id: pluginInternal
+        property int padding: 10
+    }
+
+    BusyIndicator {
+        width: parent.width * 0.20
+        height: parent.width * 0.20
+        anchors.horizontalCenter: parent.horizontalCenter
+        running: update<%= config[:pluginname].capitalize.pluralize %>JsonListModel.state === "loading"
+    }
+
+    Flickable {
+        id: flickable
+        clip: true
+        anchors {
+            fill: parent
+            margins: parent.width * 0.05
+        }
+        flickableDirection: Flickable.VerticalFlick
+        contentHeight: contentColumn.height
+        contentWidth: contentColumn.width
+
+        Column {
+            id: contentColumn
+            width: parent.width
+            padding: pluginInternal.padding
+            spacing: 15
+
+            <%- config[:fields].each do |field| -%>
+
+            Column {
+                width: flickable.width
+
+                Label {
+                    text: "<%= field.split(':').first.capitalize %>"
+                }
+
+                Components.Custom<%= field.split(':').last == "string" ? "Text" : "Date" %>Field {
+                    id: <%= field.split(':').first %><%= field.split(':').last.capitalize %>Field
+                    width: parent.width
+                    text: modelIsEmpty ? "" : model["<%= field.split(':').first %>"]
+                    readOnly: !editMode
+                }
+
+                Label {
+                    id: <%= field.split(':').first %>ErrorLabel
+                    font.pixelSize: 10
+                    color: "red"
+                    text: "cannot be blank"
+                    visible: false
+                }
+            }
+            <%- end -%>
+        }
+    }
+    
+    Dialog {
+        id: deleteDialog
+        standardButtons: StandardButton.Ok | StandardButton.Cancel
+        title: "Do you really want to delete it?"
+        onAccepted: {
+            delete<%= config[:pluginname].capitalize.pluralize %>JsonListModel.load()
+        }
+    }    
+}

@@ -1,0 +1,13 @@
+{
+    "name": "<%= config[:pluginname].downcase %>",
+    "type": "normal",
+    "menuName": "<%= config[:pluginname].capitalize %>",
+    "icon": "<%= config[:icon].split('/').last %>",
+    "mainPage": "<%= config[:pluginname].downcase %>.qml",
+    "itemHead": "<%= config[:itemhead] %>",
+    "showInSwipeView": true,
+    "showInDrawer": true,
+    "drawerPosition": 0,
+    "swipeViewPosition": 0,
+    "homePlugin": true
+}
